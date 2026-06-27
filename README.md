@@ -51,7 +51,7 @@ This file is git-ignored and never committed — copy `.env.example` as a starti
 **Hugging Face Spaces deployment:** set `MONGODB_URI` under **Settings → Variables and secrets**, added as a **Secret** (not a public Variable), since it contains your database password.
 
 ## MongoDB Setup (one-time)
-1. Create a free M0 cluster on [MongoDB Atlas](https://cloud.mongodb.com)
+1. Create a free M0 cluster on [MongoDB Atlas](https://www.mongodb.com/cloud/atlas/register)
 2. Database Access → add a database user (username + password)
 3. Network Access → allow `0.0.0.0/0` (required since Hugging Face Spaces doesn't have a fixed outbound IP to whitelist)
 4. Connect → Drivers → Python → copy the connection string, substituting in your actual (URL-encoded) password
