@@ -1,7 +1,7 @@
 ---
 title: Face Recognition Web App v2
-colorFrom: teal
-colorTo: green
+colorFrom: green
+colorTo: blue
 sdk: docker
 pinned: false
 ---
