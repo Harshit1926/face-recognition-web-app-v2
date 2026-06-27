@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register Face — Face Recognition System</title>
+    <link rel="stylesheet" href="/static/css/register.css">
+</head>
+<body>
+
+<div class="app-container">
+
+    <div class="app-header">
+        <div class="status-dot" id="status-dot"></div>
+        <h1>Face Registration</h1>
+        <a href="/recognize" class="header-link" id="recognize-link">Recognize a face →</a>
+    </div>
+
+    <!-- Screen 1: Name entry -->
+    <div id="name-screen" class="screen">
+        <p class="lead">New here? Enter your name to register your face. Already registered? Use the link above to go straight to recognition.</p>
+
+        <div class="form-group">
+            <label for="name-input">Your name</label>
+            <input type="text" id="name-input" placeholder="e.g. Harshit Malhotra" autocomplete="off">
+        </div>
+
+        <button id="start-capture-btn">Continue to Camera</button>
+    </div>
+
+    <!-- Screen 2: Capture -->
+    <div id="capture-screen" class="screen" style="display:none">
+        <p class="lead">Look at the camera and slowly turn your head left, right, up, and down while we capture your face.</p>
+
+        <div class="camera-frame">
+            <video id="webcam-video" autoplay playsinline muted></video>
+            <canvas id="capture-canvas" style="display:none"></canvas>
+            <div class="capture-overlay" id="capture-overlay">
+                <span id="capture-status">Preparing camera…</span>
+            </div>
+        </div>
+
+        <div class="progress-row">
+            <div class="progress-track">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            <span class="progress-label" id="progress-label">0 / 45</span>
+        </div>
+
+        <div class="actions-row">
+            <button id="begin-btn" disabled>Start Capturing</button>
+            <button id="cancel-btn" class="secondary">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Screen 3: Processing -->
+    <div id="processing-screen" class="screen" style="display:none">
+        <div class="spinner" aria-hidden="true"></div>
+        <p class="lead" id="processing-text">Analyzing your photos…</p>
+        <p class="sub">This usually takes about a minute. Please don't close this page.</p>
+    </div>
+
+    <!-- Screen 4: Result -->
+    <div id="result-screen" class="screen" style="display:none">
+        <div class="result-icon" id="result-icon">✓</div>
+        <h2 id="result-heading">Registration complete</h2>
+        <p class="lead" id="result-message"></p>
+        <div class="actions-row">
+            <button id="done-btn">Register Another</button>
+            <a href="/recognize" class="button-link">Try Recognition →</a>
+        </div>
+    </div>
+
+</div>
+
+<script src="/static/js/register.js"></script>
+
+</body>
+</html>

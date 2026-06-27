@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Recognition — Face Recognition System</title>
+    <link rel="stylesheet" href="/static/css/register.css">
+    <link rel="stylesheet" href="/static/css/recognize.css">
+</head>
+<body>
+
+<div class="app-container">
+
+    <div class="app-header">
+        <div class="status-dot" id="status-dot"></div>
+        <h1>Live Recognition</h1>
+        <a href="/" class="header-link">Register a face →</a>
+    </div>
+
+    <div class="screen">
+        <p class="lead">Look at the camera. Recognition updates automatically every second.</p>
+
+        <div class="camera-frame">
+            <video id="webcam-video" autoplay playsinline muted></video>
+            <canvas id="capture-canvas" style="display:none"></canvas>
+            <div id="no-model-banner" class="no-model-banner" style="display:none">
+                No one is registered yet. <a href="/">Register a face</a> first.
+            </div>
+        </div>
+
+        <div id="result-card" class="result-card" style="display:none">
+            <div class="result-top">
+                <span id="result-label" class="result-label">—</span>
+                <span id="result-confidence" class="result-confidence"></span>
+            </div>
+
+            <div id="breakdown-list" class="breakdown-list"></div>
+
+            <button id="delete-data-btn" class="delete-btn" style="display:none">That's me — delete my data</button>
+        </div>
+
+        <!-- Delete confirmation overlay -->
+        <div id="delete-confirm-card" class="delete-confirm-card" style="display:none">
+            <p class="lead">To confirm it's really you, look directly at the camera. We'll re-check your face before deleting anything.</p>
+            <div id="delete-status" class="sub">Verifying…</div>
+            <div class="actions-row">
+                <button id="confirm-delete-btn">Confirm Delete</button>
+                <button id="cancel-delete-btn" class="secondary">Cancel</button>
+            </div>
+        </div>
+
+        <p class="sub" id="status-text">Starting camera…</p>
+    </div>
+
+</div>
+
+<script src="/static/js/recognize.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,142 @@
+.no-model-banner {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 24px;
+    color: #ffffff;
+    background-color: rgba(22, 48, 43, 0.85);
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.no-model-banner a {
+    color: #7fd9bd;
+    text-decoration: underline;
+}
+
+.result-card {
+    background-color: #f8fafa;
+    border: 1px solid #e3e8e7;
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-bottom: 16px;
+}
+
+.result-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 12px;
+}
+
+.result-label {
+    font-size: 18px;
+    font-weight: 600;
+    color: #16302b;
+}
+
+.result-label.unknown {
+    color: #9aa6a3;
+}
+
+.result-confidence {
+    font-size: 13px;
+    color: #5c6967;
+}
+
+.breakdown-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.breakdown-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.breakdown-name {
+    font-size: 12px;
+    color: #43504d;
+    width: 90px;
+    flex-shrink: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.breakdown-bar-track {
+    flex: 1;
+    height: 6px;
+    background-color: #e3e8e7;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.breakdown-bar-fill {
+    height: 100%;
+    background-color: #2f7d6c;
+    border-radius: 3px;
+    transition: width 0.3s ease-out;
+}
+
+.breakdown-pct {
+    font-size: 12px;
+    color: #5c6967;
+    width: 42px;
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.delete-btn {
+    width: 100%;
+    margin-top: 14px;
+    padding: 10px;
+    background-color: #ffffff;
+    color: #b3261e;
+    border: 1px solid #e8a3a3;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.delete-btn:hover {
+    background-color: #fbe9e9;
+}
+
+.delete-confirm-card {
+    background-color: #fdeaea;
+    border: 1px solid #e8a3a3;
+    border-radius: 10px;
+    padding: 18px;
+    margin-bottom: 16px;
+}
+
+.delete-confirm-card .lead {
+    color: #7a1f1f;
+    margin-bottom: 12px;
+}
+
+.delete-confirm-card .sub {
+    margin-bottom: 14px;
+    text-align: left;
+}
+
+#confirm-delete-btn {
+    background-color: #b3261e;
+}
+
+#confirm-delete-btn:hover {
+    background-color: #8f1e18;
+}
+
+.error-text {
+    color: #b3261e;
+    font-weight: 500;
+}

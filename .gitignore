@@ -1,0 +1,23 @@
+# Secrets — never commit
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Temporary registration frames (created and deleted automatically,
+# but ignore just in case any are ever left behind)
+_temp_raw_frames/
+
+# Legacy classifier artifacts (no longer used, but ignore if present)
+final_face_model.pth
+classes.json
+embeddings.json
+
+# DeepFace's downloaded model weights (large, re-downloaded automatically)
+.deepface/
+
+# OS/editor noise
+.DS_Store
+*.swp
