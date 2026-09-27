@@ -23,6 +23,12 @@ How this works:
 No training, no epochs, no retraining when a new person registers —
 adding someone is just computing one new vector and saving it.
 
+NOTE: Both registration and recognition now process frames entirely
+in memory (numpy arrays decoded from base64), with no temp files
+written to disk at any point. DeepFace.represent() accepts either a
+file path or a numpy array for its img_path argument, so no disk
+round-trip is required.
+
 Storage backend: MongoDB Atlas, via pymongo. Connection string is read
 from the MONGODB_URI environment variable — never hardcode it in this
 file or commit it to version control.
@@ -92,8 +98,15 @@ def _get_collection():
 
 def get_embedding(image_path_or_array):
     """
-    Runs DeepFace's embedding extraction on a single image
-    (file path or numpy array, BGR — same as cv2 reads).
+    Runs DeepFace's embedding extraction on a single image.
+
+    Accepts EITHER:
+        - a file path (str), or
+        - a decoded image as a numpy array (BGR — same as cv2 reads)
+
+    DeepFace.represent() supports both natively via its img_path
+    argument, so callers can pass whichever they have on hand without
+    this function needing to know or care which one it is.
 
     Returns a 1D numpy array (the embedding vector), or None if no
     face could be detected/embedded.
@@ -118,25 +131,30 @@ def get_embedding(image_path_or_array):
     return np.array(result[0]["embedding"])
 
 
-def average_embeddings(frame_paths: list) -> tuple:
+def average_embeddings(frames: list) -> tuple:
     """
-    Given a list of image file paths (the 45 raw captured frames),
-    extracts an embedding from each and averages them into one vector.
+    Given a list of already-decoded frames (numpy arrays, BGR — as
+    produced by cv2.imdecode), extracts an embedding from each and
+    averages them into one vector.
+
+    Frames are processed entirely in memory: nothing here reads from
+    or writes to disk. Callers are responsible for decoding raw bytes
+    (e.g. base64-encoded JPEGs) into numpy arrays before calling this.
 
     Returns (averaged_vector: np.ndarray | None, num_successful: int, num_total: int)
     """
     vectors = []
 
-    for path in frame_paths:
-        emb = get_embedding(path)
+    for frame in frames:
+        emb = get_embedding(frame)
         if emb is not None:
             vectors.append(emb)
 
     if not vectors:
-        return None, 0, len(frame_paths)
+        return None, 0, len(frames)
 
     averaged = np.mean(vectors, axis=0)
-    return averaged, len(vectors), len(frame_paths)
+    return averaged, len(vectors), len(frames)
 
 
 # =========================

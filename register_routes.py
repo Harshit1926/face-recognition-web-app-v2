@@ -8,12 +8,25 @@ classifier + Fine_Tune.py retraining approach.
 Flow:
     1. Browser captures 45 raw frames, sends them all in one POST
        along with the person's name.
-    2. Flask saves the 45 raw frames to a temp folder.
+    2. Flask decodes each base64 frame straight into a numpy array —
+       entirely in memory, nothing is written to disk.
     3. face_embeddings.average_embeddings() extracts an ArcFace embedding
-       from each frame and averages them into one vector.
+       from each decoded frame and averages them into one vector.
     4. That vector is saved into MongoDB via save_embedding().
     5. Response tells the browser registration succeeded — no training
        step exists anymore, so this is fast (seconds, not minutes).
+
+This mirrors how /api/face/recognize already works in app.py (decode
+base64 -> cv2.imdecode -> numpy array -> DeepFace), instead of the
+previous approach of writing 45 files to a temp folder and deleting
+them afterward. Benefits:
+    - No filesystem writes at all for this route, so no temp-folder
+      race condition between concurrent registrations under the same
+      sanitized name.
+    - One consistent decode path shared conceptually with recognition,
+      instead of two different mechanisms for the same operation.
+    - Slightly faster: skips 45 disk writes + 45 disk reads per
+      registration.
 
 This module assumes it's imported into your main Flask app, e.g.:
 
@@ -21,10 +34,10 @@ This module assumes it's imported into your main Flask app, e.g.:
     app.register_blueprint(register_blueprint)
 """
 
-import os
-import base64
-import shutil
 import re
+import base64
+import numpy as np
+import cv2
 from flask import Blueprint, request, jsonify
 
 from face_embeddings import (
@@ -35,9 +48,6 @@ from face_embeddings import (
 )
 
 register_blueprint = Blueprint("register_blueprint", __name__)
-
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-TEMP_RAW_DIR = os.path.join(BASE_DIR, "_temp_raw_frames")
 
 EXPECTED_FRAME_COUNT = 45
 MIN_SUCCESSFUL_EMBEDDINGS = 5  # require at least this many usable frames
@@ -55,17 +65,25 @@ def sanitize_name(raw_name: str) -> str:
     return name
 
 
-def decode_base64_frame(data_url: str, out_path: str) -> None:
+def decode_base64_frame(data_url: str):
     """
     Decodes a base64 data URL (e.g. 'data:image/jpeg;base64,...')
-    and writes it to out_path as a JPEG file.
+    into a numpy array (BGR, same as cv2.imread would produce).
+
+    Returns the decoded frame as a numpy array, or None if the data
+    could not be decoded into a valid image.
+
+    This never touches disk — the JPEG bytes are decoded directly into
+    memory via cv2.imdecode, the same approach /api/face/recognize
+    already uses in app.py.
     """
     if "," in data_url:
         data_url = data_url.split(",", 1)[1]
 
     img_bytes = base64.b64decode(data_url)
-    with open(out_path, "wb") as f:
-        f.write(img_bytes)
+    img_array = np.frombuffer(img_bytes, dtype=np.uint8)
+    frame = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
+    return frame
 
 
 @register_blueprint.route("/api/face/register", methods=["POST"])
@@ -83,17 +101,17 @@ def register_face():
         return jsonify({"error": "Expected JSON body"}), 400
 
     raw_name = data.get("name", "")
-    frames = data.get("frames", [])
+    frames_b64 = data.get("frames", [])
 
     if not raw_name:
         return jsonify({"error": "Name is required"}), 400
 
-    if not frames:
+    if not frames_b64:
         return jsonify({"error": "No frames received"}), 400
 
-    if len(frames) < 10:
+    if len(frames_b64) < 10:
         return jsonify({
-            "error": f"Too few frames received ({len(frames)}). Expected around {EXPECTED_FRAME_COUNT}."
+            "error": f"Too few frames received ({len(frames_b64)}). Expected around {EXPECTED_FRAME_COUNT}."
         }), 400
 
     safe_name = sanitize_name(raw_name)
@@ -106,31 +124,27 @@ def register_face():
             "error": f"A person named '{safe_name}' is already registered."
         }), 409
 
-    # ── Step 1: save raw frames to a temp folder ──
-    raw_dir = os.path.join(TEMP_RAW_DIR, safe_name)
-    os.makedirs(raw_dir, exist_ok=True)
-
-    frame_paths = []
+    # ── Step 1: decode each base64 frame into a numpy array in memory ──
+    # No temp folder, no disk writes — frames live only as local
+    # variables for the duration of this request.
+    decoded_frames = []
 
     try:
-        for idx, frame_data in enumerate(frames):
-            frame_path = os.path.join(raw_dir, f"raw_{idx:03d}.jpg")
-            decode_base64_frame(frame_data, frame_path)
-            frame_paths.append(frame_path)
+        for frame_data in frames_b64:
+            frame = decode_base64_frame(frame_data)
+            if frame is not None:
+                decoded_frames.append(frame)
     except Exception as e:
-        shutil.rmtree(raw_dir, ignore_errors=True)
         return jsonify({"error": f"Failed to decode frames: {e}"}), 400
+
+    if not decoded_frames:
+        return jsonify({"error": "Could not decode any of the received frames."}), 400
 
     # ── Step 2: extract embeddings from each frame, average them ──
     try:
-        averaged_vector, num_successful, num_total = average_embeddings(frame_paths)
+        averaged_vector, num_successful, num_total = average_embeddings(decoded_frames)
     except Exception as e:
-        shutil.rmtree(raw_dir, ignore_errors=True)
         return jsonify({"error": f"Embedding extraction failed: {e}"}), 500
-    finally:
-        # Raw temp frames are no longer needed once embeddings are extracted —
-        # the averaged vector is all that gets stored, not the photos themselves.
-        shutil.rmtree(raw_dir, ignore_errors=True)
 
     if averaged_vector is None or num_successful < MIN_SUCCESSFUL_EMBEDDINGS:
         return jsonify({
